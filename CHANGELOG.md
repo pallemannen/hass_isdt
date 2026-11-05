@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Rejected cells count. Every slot is now in exactly one of Free slots, Cells charging, Cells charged, Invalid cells, and Rejected cells, so they always add up to the number of slots.
 - Charger counts: Slots, Free slots, Cells charging, Cells charged, Invalid cells.
 - Icons for all entities. Status, verdict, why charging stopped, and the charger event change icon with their state.
 - Repairs for hazardous cells: an alkaline that is being charged, and a shorted cell (both errors), and a charge that runs for more than 4 hours (warning). A repair goes away by itself once the slot is empty, or charging stops.
@@ -16,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The Charging slots count, replaced by Cells charging. "Charging slots" was ambiguous.
 
 ### Fixed
+- An alkaline that the charger stopped after a short pulse, or refused, was reported as worn, or rejected, not as possibly alkaline. A cell that never charged normally, with an internal resistance of 1000 mΩ or more, is now possibly alkaline, and raises a repair. Healthy NiMH cells read 150–300 mΩ.
 - Polls failed most of the time while cells were charging, which made all entities
   unavailable. A busy N24 now and then answers late, or not at all. Late replies are now
   recognised and skipped, a missed request is retried up to twice, and isdttool-pal 1.1.2

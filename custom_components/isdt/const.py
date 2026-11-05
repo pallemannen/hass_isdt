@@ -82,6 +82,13 @@ VERDICTS = [
 # Verdicts that mean "take this cell out", and stay until the slot is emptied.
 REMOVE_VERDICTS = (VERDICT_POSSIBLE_ALKALINE, VERDICT_SHORTED)
 
+# The charger's counts. Every slot is in exactly one, so they add up to the number of slots.
+CATEGORY_FREE = "free"
+CATEGORY_CHARGING = "charging"
+CATEGORY_CHARGED = "charged"
+CATEGORY_INVALID = "invalid"  # Possibly alkaline, or shorted: the cells that raise a repair
+CATEGORY_REJECTED = "rejected"  # Refused by the charger
+
 # Why charging stopped
 TERMINATIONS = {
     1: "voltage_limit",

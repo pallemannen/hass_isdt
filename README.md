@@ -43,7 +43,7 @@ The verdict is per insertion: the charger can't tell one cell from another, so i
 | Good | Normal charge, normal internal resistance |
 | Worn | Internal resistance at or above the limit (default 400 mΩ, see options). Healthy NiMH cells read about 150–300 mΩ. |
 | Rejected | The charger refused the cell. Often an alkaline, or a NiCd. |
-| Remove: possibly alkaline | The charger is charging a cell that behaves like an alkaline. Take it out; alkalines can leak when charged. Fires `remove_cell`. |
+| Remove: possibly alkaline | The cell behaves like an alkaline: the charger pre-charges it at a voltage no flat NiMH has, or its internal resistance is 1000 mΩ or more. Take it out; alkalines can leak when charged, and the charger retries them every few hours. Fires `remove_cell`. |
 | Trash: shorted | The cell stays at 0 V while being pre-charged. Fires `remove_cell`. |
 | Checking | Not enough information yet |
 
