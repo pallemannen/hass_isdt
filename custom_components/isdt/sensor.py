@@ -24,7 +24,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    REMOVE_VERDICTS,
+    CATEGORY_CHARGED,
+    CATEGORY_CHARGING,
+    CATEGORY_FREE,
+    CATEGORY_INVALID,
+    CATEGORY_REJECTED,
     STATUS_CHARGED,
     STATUS_CHARGING,
     STATUS_EMPTY,
@@ -34,7 +38,7 @@ from .const import (
     TERMINATIONS,
     VERDICTS,
 )
-from .coordinator import IsdtConfigEntry, IsdtCoordinator, SlotState
+from .coordinator import IsdtConfigEntry, IsdtCoordinator, SlotState, slot_category
 from .entity import IsdtChargerEntity, IsdtSlotEntity
 
 PARALLEL_UPDATES = 0
@@ -196,6 +200,10 @@ class IsdtChargerSensorDescription(SensorEntityDescription):
     value: Callable[[list[SlotState]], int]
 
 
+def _count(category: str) -> Callable[[list[SlotState]], int]:
+    return lambda slots: sum(slot_category(slot) == category for slot in slots)
+
+
 CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
     IsdtChargerSensorDescription(
         key="slots",
@@ -204,24 +212,27 @@ CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
     IsdtChargerSensorDescription(
         key="free_slots",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda slots: sum(slot.status == STATUS_EMPTY for slot in slots),
+        value=_count(CATEGORY_FREE),
     ),
     IsdtChargerSensorDescription(
         key="cells_charging",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda slots: sum(
-            slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE) for slot in slots
-        ),
+        value=_count(CATEGORY_CHARGING),
     ),
     IsdtChargerSensorDescription(
         key="cells_charged",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda slots: sum(slot.status == STATUS_CHARGED for slot in slots),
+        value=_count(CATEGORY_CHARGED),
     ),
     IsdtChargerSensorDescription(
         key="invalid_cells",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda slots: sum(slot.verdict in REMOVE_VERDICTS for slot in slots),
+        value=_count(CATEGORY_INVALID),
+    ),
+    IsdtChargerSensorDescription(
+        key="rejected_cells",
+        state_class=SensorStateClass.MEASUREMENT,
+        value=_count(CATEGORY_REJECTED),
     ),
 )
 

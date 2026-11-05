@@ -59,6 +59,9 @@
       },
       "invalid_cells": {
         "default": "mdi:battery-alert"
+      },
+      "rejected_cells": {
+        "default": "mdi:battery-remove"
       }
     },
     "event": {

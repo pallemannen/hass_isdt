@@ -23,7 +23,7 @@ The charger is a device, and each slot is a device of its own under it (`N24 Slo
 
 Measurements of an empty slot are unavailable, rather than showing the last cell's values.
 
-The charger device has five counts: **Slots** (24 on the N24), **Free slots**, **Cells charging** (including pre-charge), **Cells charged** (finished, waiting to be taken out), and **Invalid cells** (possibly alkaline, or shorted; the same cells that raise a repair). It also has a **Charger event** entity that fires:
+The charger device has a **Slots** count (24 on the N24), and five counts that always add up to it, since every slot is in exactly one: **Free slots**, **Cells charging** (including pre-charge), **Cells charged** (finished, waiting to be taken out), **Invalid cells** (possibly alkaline, or shorted; the cells that raise a repair), and **Rejected cells** (refused by the charger). It also has a **Charger event** entity that fires:
 
 - `charged`: a slot finished charging.
 - `all_charged`: nothing is charging anymore.
@@ -43,7 +43,7 @@ The verdict is per insertion: the charger can't tell one cell from another, so i
 | Good | Normal charge, normal internal resistance |
 | Worn | Internal resistance at or above the limit (default 400 mΩ, see options). Healthy NiMH cells read about 150–300 mΩ. |
 | Rejected | The charger refused the cell. Often an alkaline, or a NiCd. |
-| Remove: possibly alkaline | The charger is charging a cell that behaves like an alkaline. Take it out; alkalines can leak when charged. Fires `remove_cell`. |
+| Remove: possibly alkaline | The cell behaves like an alkaline: the charger pre-charges it at a voltage no flat NiMH has, or its internal resistance is 1000 mΩ or more. Take it out; alkalines can leak when charged, and the charger retries them every few hours. Fires `remove_cell`. |
 | Trash: shorted | The cell stays at 0 V while being pre-charged. Fires `remove_cell`. |
 | Checking | Not enough information yet |
 

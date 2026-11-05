@@ -21,6 +21,11 @@ from .const import (
     ALKALINE_PRECHARGE_VOLTAGE,
     ALKALINE_RESISTANCE,
     BACKOFF_INTERVALS,
+    CATEGORY_CHARGED,
+    CATEGORY_CHARGING,
+    CATEGORY_FREE,
+    CATEGORY_INVALID,
+    CATEGORY_REJECTED,
     CHEMISTRY_NIMH,
     CHEMISTRY_PRE_CHARGE,
     CHEMISTRY_REJECTED,
@@ -85,6 +90,21 @@ def slot_status(metrics: dict[str, Any]) -> str:
     if mode == MODE_IDLE:
         return STATUS_IDLE
     return STATUS_UNKNOWN
+
+
+def slot_category(slot: SlotState) -> str:
+    """Which of the charger's counts a slot belongs to. Every slot is in exactly one."""
+    if slot.status == STATUS_EMPTY:
+        return CATEGORY_FREE
+    if slot.verdict in REMOVE_VERDICTS:
+        return CATEGORY_INVALID
+    if slot.verdict == VERDICT_REJECTED:
+        return CATEGORY_REJECTED
+    if slot.status in (STATUS_CHARGED, STATUS_REJECTED):
+        # Rejected after it charged normally: it was only bumped, and is full.
+        return CATEGORY_CHARGED
+    # Charging, pre-charging, or about to start
+    return CATEGORY_CHARGING
 
 
 @dataclass
@@ -326,6 +346,11 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                 return VERDICT_POSSIBLE_ALKALINE
         else:
             slot.flat_since = None
+
+        # No healthy NiMH comes close to this. Alkalines do, whether the charger stops after a
+        # short pulse, or refuses them right away.
+        if not slot.charged_normally and (slot.resistance or 0) >= ALKALINE_RESISTANCE:
+            return VERDICT_POSSIBLE_ALKALINE
 
         if status == STATUS_REJECTED and not slot.charged_normally:
             return VERDICT_REJECTED

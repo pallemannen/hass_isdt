@@ -122,6 +122,9 @@
       },
       "invalid_cells": {
         "name": "Invalid cells"
+      },
+      "rejected_cells": {
+        "name": "Rejected cells"
       }
     },
     "event": {
