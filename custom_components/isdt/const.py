@@ -97,3 +97,15 @@ EVENT_ALL_CHARGED = "all_charged"
 EVENT_REMOVE_CELL = "remove_cell"
 EVENT_LONG_CHARGE = "long_charge"
 EVENT_TYPES = [EVENT_CHARGED, EVENT_ALL_CHARGED, EVENT_REMOVE_CELL, EVENT_LONG_CHARGE]
+
+# Repairs, raised while a hazardous cell is in a slot
+REPAIR_POSSIBLE_ALKALINE = "possible_alkaline"
+REPAIR_SHORTED = "shorted"
+REPAIR_LONG_CHARGE = "long_charge"
+REPAIR_SEVERITY = {
+    # Alkalines can leak, or burst, when charged.
+    REPAIR_POSSIBLE_ALKALINE: "error",
+    # A shorted cell takes current, and turns it into heat.
+    REPAIR_SHORTED: "error",
+    REPAIR_LONG_CHARGE: "warning",
+}

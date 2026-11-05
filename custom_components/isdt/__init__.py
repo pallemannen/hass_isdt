@@ -9,7 +9,7 @@ from __future__ import annotations
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .api import CannotConnect, get_info
 from .const import DOMAIN
@@ -53,6 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsdtConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: IsdtConfigEntry) -> bool:
     """Unload a charger."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: IsdtConfigEntry) -> None:
+    """The charger was removed: withdraw its repairs."""
+    for issue in list(ir.async_get(hass).issues.values()):
+        if issue.domain == DOMAIN and issue.issue_id.startswith(f"{entry.entry_id}_"):
+            ir.async_delete_issue(hass, DOMAIN, issue.issue_id)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: IsdtConfigEntry) -> None:
