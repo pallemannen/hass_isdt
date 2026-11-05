@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Per slot: **Cell inserted**, **Charging** and **Problem** on/off sensors. Problem is on for invalid and rejected cells.
-- Per slot: **Charging since**, when the current charge started.
+- Per slot: **Charging since**, when the current charge started. A cell that finished before a restart keeps it.
 - Charger: **Total current**, what the charger puts into all cells together.
 - The slots are put in the charger's area, and move with it. A slot put in another area on purpose stays there.
 - Blueprint **ISDT charger event**: runs actions on a charger event, all slots charged by default.
