@@ -1,0 +1,17 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [Unreleased]
+
+## [0.1.0] - 2026-11-04
+
+### Added
+- Config flow: host and port of an isdttool bridge. The charger's serial number is the unique ID. Reconfigure to change the address.
+- Options: poll interval, and the internal resistance from which a cell counts as worn.
+- A device per charger, and one per slot, with status, verdict, voltage, current, progress, charged capacity, charging time, internal resistance, temperature, and the reason why charging stopped.
+- Charger event entity: `charged`, `all_charged`, `remove_cell`, `long_charge`.
+- Backoff when the bridge is unreachable: 30 s, 1 min, 2 min, then every 5 min.
+- Diagnostics.

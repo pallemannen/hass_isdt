@@ -1,0 +1,131 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ISDT charger",
+        "description": "The charger is reached through an isdttool bridge (`isdttool serve`) on the machine it is plugged into.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Host name or IP address of the machine running the bridge.",
+          "port": "TCP port of the bridge. The first charger on a machine uses 24000, the next 24001, and so on."
+        }
+      },
+      "reconfigure": {
+        "title": "Change the bridge address",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Host name or IP address of the machine running the bridge.",
+          "port": "TCP port of the bridge."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach the bridge, or the charger does not answer. Check that `isdttool serve` runs, and that the host and port are right.",
+      "unknown": "Unexpected error. See the log for details."
+    },
+    "abort": {
+      "already_configured": "This charger is already set up. Its address has been updated.",
+      "reconfigure_successful": "The address has been changed.",
+      "wrong_charger": "That address leads to a different charger."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ISDT charger options",
+        "data": {
+          "scan_interval": "Poll interval (seconds)",
+          "worn_resistance": "Worn above (mΩ)"
+        },
+        "data_description": {
+          "worn_resistance": "A cell whose internal resistance is at least this is reported as worn. Healthy NiMH cells read about 150–300 mΩ."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "empty": "Empty",
+          "idle": "Idle",
+          "pre_charge": "Pre-charging",
+          "charging": "Charging",
+          "charged": "Charged",
+          "rejected": "Rejected",
+          "unknown": "Unknown"
+        }
+      },
+      "verdict": {
+        "name": "Verdict",
+        "state": {
+          "checking": "Checking",
+          "good": "Good",
+          "worn": "Worn",
+          "rejected": "Rejected",
+          "possible_alkaline": "Remove: possibly alkaline",
+          "shorted": "Trash: shorted"
+        }
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "charged_capacity": {
+        "name": "Charged capacity"
+      },
+      "charging_time": {
+        "name": "Charging time"
+      },
+      "resistance": {
+        "name": "Internal resistance"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "termination": {
+        "name": "Charge stopped by",
+        "state": {
+          "voltage_limit": "Voltage limit",
+          "minus_delta_v": "-ΔV (full)",
+          "zero_delta_v": "0ΔV (full)",
+          "pre_charge_failed": "Pre-charge failed",
+          "unknown": "Unknown"
+        }
+      },
+      "internal_temperature": {
+        "name": "Charger temperature"
+      },
+      "charging_slots": {
+        "name": "Charging slots"
+      }
+    },
+    "event": {
+      "charger_event": {
+        "name": "Charger event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "charged": "Slot charged",
+              "all_charged": "All slots charged",
+              "remove_cell": "Remove cell",
+              "long_charge": "Unusually long charge"
+            }
+          }
+        }
+      }
+    }
+  }
+}
