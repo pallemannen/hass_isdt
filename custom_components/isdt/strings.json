@@ -125,6 +125,9 @@
       },
       "rejected_cells": {
         "name": "Rejected cells"
+      },
+      "charger_temperature": {
+        "name": "Temperature"
       }
     },
     "event": {

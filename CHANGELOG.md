@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-04
+
+### Added
+- Temperature of the charger itself, on the charger device: the highest of the temperatures it measures. While charging, they differ by up to 4 °C between slots.
+
 ## [0.1.0] - 2026-11-04
 
 First release. Monitors an ISDT charger, slot by slot, through an isdttool bridge. Developed with the ISDT N24.
