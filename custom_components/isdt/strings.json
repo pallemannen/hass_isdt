@@ -120,8 +120,8 @@
       "cells_charged": {
         "name": "Cells charged"
       },
-      "hazardous_cells": {
-        "name": "Hazardous cells"
+      "invalid_cells": {
+        "name": "Invalid cells"
       }
     },
     "event": {

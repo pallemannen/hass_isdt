@@ -219,7 +219,7 @@ CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
         value=lambda slots: sum(slot.status == STATUS_CHARGED for slot in slots),
     ),
     IsdtChargerSensorDescription(
-        key="hazardous_cells",
+        key="invalid_cells",
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda slots: sum(slot.verdict in REMOVE_VERDICTS for slot in slots),
     ),
