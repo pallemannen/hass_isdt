@@ -39,8 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsdtConfigEntry) -> bool
         identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
         manufacturer="ISDT",
         model=info.model,
+        model_id=info.build_number,
         name=entry.title,
-        hw_version=info.hw_version,
+        hw_version=(
+            f"{info.hw_version} (built {info.build_date})"
+            if info.build_date
+            else info.hw_version
+        ),
         sw_version=info.app_version,
         serial_number=info.serial,
     )
