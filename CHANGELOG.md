@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Icons for all entities. Status, verdict, why charging stopped, and the charger event change icon with their state.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added
