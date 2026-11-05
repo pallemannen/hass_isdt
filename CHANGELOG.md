@@ -7,9 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Charger counts: Slots, Free slots, Cells charging, Cells charged, Hazardous cells.
 - Icons for all entities. Status, verdict, why charging stopped, and the charger event change icon with their state.
 - Repairs for hazardous cells: an alkaline that is being charged, and a shorted cell (both errors), and a charge that runs for more than 4 hours (warning). A repair goes away by itself once the slot is empty, or charging stops.
 - The charger's build number (the timestamp at the end of its version reply, also part of the PN on its screen) as the device's model ID, and the build date after the hardware version.
+
+### Removed
+- The Charging slots count, replaced by Cells charging. "Charging slots" was ambiguous.
 
 ## [0.1.0] - 2026-11-04
 

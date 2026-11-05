@@ -45,8 +45,20 @@
           "pre_charge_failed": "mdi:battery-alert-variant-outline"
         }
       },
-      "charging_slots": {
+      "slots": {
+        "default": "mdi:battery-outline"
+      },
+      "free_slots": {
+        "default": "mdi:battery-off-outline"
+      },
+      "cells_charging": {
         "default": "mdi:battery-charging"
+      },
+      "cells_charged": {
+        "default": "mdi:battery-check"
+      },
+      "hazardous_cells": {
+        "default": "mdi:battery-alert"
       }
     },
     "event": {

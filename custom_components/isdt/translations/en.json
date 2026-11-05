@@ -108,8 +108,20 @@
       "internal_temperature": {
         "name": "Charger temperature"
       },
-      "charging_slots": {
-        "name": "Charging slots"
+      "slots": {
+        "name": "Slots"
+      },
+      "free_slots": {
+        "name": "Free slots"
+      },
+      "cells_charging": {
+        "name": "Cells charging"
+      },
+      "cells_charged": {
+        "name": "Cells charged"
+      },
+      "hazardous_cells": {
+        "name": "Hazardous cells"
       }
     },
     "event": {

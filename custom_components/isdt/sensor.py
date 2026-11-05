@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    REMOVE_VERDICTS,
     STATUS_CHARGED,
     STATUS_CHARGING,
     STATUS_EMPTY,
@@ -146,7 +147,7 @@ async def async_setup_entry(
     """Set up the sensors."""
     coordinator = entry.runtime_data
     entities: list[SensorEntity] = [
-        IsdtChargingSlotsSensor(coordinator),
+        IsdtChargerSensor(coordinator, description) for description in CHARGER_SENSORS
     ]
     entities.extend(
         IsdtSlotSensor(coordinator, slot, description)
@@ -188,19 +189,56 @@ class IsdtSlotSensor(IsdtSlotEntity, SensorEntity):
         return self.entity_description.value(self.slot)
 
 
-class IsdtChargingSlotsSensor(IsdtChargerEntity, SensorEntity):
-    """How many slots are charging right now."""
+@dataclass(frozen=True, kw_only=True)
+class IsdtChargerSensorDescription(SensorEntityDescription):
+    """A count over all slots of the charger."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    value: Callable[[list[SlotState]], int]
 
-    def __init__(self, coordinator: IsdtCoordinator) -> None:
+
+CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
+    IsdtChargerSensorDescription(
+        key="slots",
+        value=len,
+    ),
+    IsdtChargerSensorDescription(
+        key="free_slots",
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda slots: sum(slot.status == STATUS_EMPTY for slot in slots),
+    ),
+    IsdtChargerSensorDescription(
+        key="cells_charging",
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda slots: sum(
+            slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE) for slot in slots
+        ),
+    ),
+    IsdtChargerSensorDescription(
+        key="cells_charged",
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda slots: sum(slot.status == STATUS_CHARGED for slot in slots),
+    ),
+    IsdtChargerSensorDescription(
+        key="hazardous_cells",
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda slots: sum(slot.verdict in REMOVE_VERDICTS for slot in slots),
+    ),
+)
+
+
+class IsdtChargerSensor(IsdtChargerEntity, SensorEntity):
+    """A count over all slots of the charger."""
+
+    entity_description: IsdtChargerSensorDescription
+
+    def __init__(
+        self, coordinator: IsdtCoordinator, description: IsdtChargerSensorDescription
+    ) -> None:
         """Set up the sensor."""
-        super().__init__(coordinator, "charging_slots")
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
 
     @property
     def native_value(self) -> int:
-        """The number of charging slots."""
-        return sum(
-            slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE)
-            for slot in self.coordinator.slots
-        )
+        """The count."""
+        return self.entity_description.value(self.coordinator.slots)

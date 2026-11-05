@@ -23,7 +23,7 @@ The charger is a device, and each slot is a device of its own under it (`N24 Slo
 
 Measurements of an empty slot are unavailable, rather than showing the last cell's values.
 
-The charger device has a **Charging slots** count, and a **Charger event** entity that fires:
+The charger device has five counts: **Slots** (24 on the N24), **Free slots**, **Cells charging** (including pre-charge), **Cells charged** (finished, waiting to be taken out), and **Hazardous cells** (possibly alkaline, or shorted; the same cells that raise a repair). It also has a **Charger event** entity that fires:
 
 - `charged`: a slot finished charging.
 - `all_charged`: nothing is charging anymore.
