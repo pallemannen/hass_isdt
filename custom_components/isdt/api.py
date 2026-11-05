@@ -35,9 +35,16 @@ class ChargerInfo:
     build_date: str | None = None
 
 
-def _open(host: str, port: int) -> isdttool.Charger:
+# A busy charger now and then misses a request. Ask again, up to this many times in all.
+ATTEMPTS = 3
+
+
+def _open(host: str, port: int, model: str | None = None) -> isdttool.Charger:
+    """Connect. Without a model, the charger is asked what it is, which takes two requests."""
     try:
-        return isdttool.get_device(host=host, port=port, model_name="auto", mode="auto")
+        if model is None:
+            return isdttool.get_device(host=host, port=port, model_name="auto", mode="auto")
+        return isdttool.get_device(host=host, port=port, model_name=model, mode="app")
     except (OSError, ValueError, KeyError, TypeError) as err:
         raise CannotConnect(str(err)) from err
 
@@ -49,10 +56,28 @@ def _request(charger: isdttool.Charger, model: str) -> dict[str, Any]:
     return parse_packet(packet, model)
 
 
+def _metrics(charger: isdttool.Charger, model: str, channel: int) -> dict[str, Any]:
+    """The metrics of one channel.
+
+    A reply that comes too late arrives while waiting for the reply to the next request, so a
+    reply only counts if it is about the channel that was asked for.
+    """
+    for _ in range(ATTEMPTS):
+        charger.metrics(channel)
+        while (packet := charger.read_packet()) is not None:
+            metrics = parse_packet(packet, model)
+            if metrics.get("_type") != "metrics" or metrics.get("_malformed"):
+                continue
+            if not metrics.get("_channel exists"):
+                return metrics
+            if metrics.get("channel") == channel:
+                return metrics
+    raise CannotConnect(f"The charger did not answer for channel {channel}")
+
+
 def _count_channels(charger: isdttool.Charger, model: str) -> int:
     for channel in range(256):
-        charger.metrics(channel)
-        if not _request(charger, model).get("_channel exists"):
+        if not _metrics(charger, model, channel).get("_channel exists"):
             return channel
     return 256
 
@@ -100,14 +125,13 @@ def get_info(host: str, port: int) -> ChargerInfo:
 
 def read_metrics(host: str, port: int, model: str, channels: int) -> list[dict[str, Any]]:
     """Read the metrics of every channel. Raises CannotConnect."""
-    charger = _open(host, port)
+    charger = _open(host, port, model)
     try:
         result = []
         for channel in range(channels):
-            charger.metrics(channel)
-            metrics = _request(charger, model)
-            if metrics.get("_malformed") or not metrics.get("_channel exists"):
-                raise CannotConnect(f"Bad reply for channel {channel}: {metrics}")
+            metrics = _metrics(charger, model, channel)
+            if not metrics.get("_channel exists"):
+                raise CannotConnect(f"Channel {channel} has disappeared")
             result.append(metrics)
         return result
     except OSError as err:

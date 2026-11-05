@@ -15,6 +15,11 @@ def charger_identifier(coordinator: IsdtCoordinator) -> tuple[str, str]:
     return (DOMAIN, entry.unique_id or entry.entry_id)
 
 
+def slot_identifier(coordinator: IsdtCoordinator, slot: SlotState) -> str:
+    """The device registry identifier of a slot."""
+    return f"{charger_identifier(coordinator)[1]}_slot_{slot.number:02d}"
+
+
 class IsdtChargerEntity(CoordinatorEntity[IsdtCoordinator]):
     """An entity of the charger itself."""
 
@@ -38,14 +43,8 @@ class IsdtSlotEntity(CoordinatorEntity[IsdtCoordinator]):
         """Set up the entity."""
         super().__init__(coordinator)
         self.slot = slot
-        identifier = charger_identifier(coordinator)
-        slot_id = f"{identifier[1]}_slot_{slot.number:02d}"
+        slot_id = slot_identifier(coordinator, slot)
         self._attr_unique_id = f"{slot_id}_{key}"
         self._attr_translation_key = key
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, slot_id)},
-            name=f"{coordinator.config_entry.title} Slot {slot.number:02d}",
-            manufacturer="ISDT",
-            model=f"{coordinator.info.model} slot",
-            via_device=identifier,
-        )
+        # The device itself is created at setup, under the charger.
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, slot_id)})

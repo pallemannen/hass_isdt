@@ -15,6 +15,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 - The Charging slots count, replaced by Cells charging. "Charging slots" was ambiguous.
 
+### Fixed
+- Polls failed most of the time while cells were charging, which made all entities
+  unavailable. A busy N24 now and then answers late, or not at all. Late replies are now
+  recognised and skipped, a missed request is retried up to twice, and isdttool-pal 1.1.2
+  waits up to 1 s for a reply over the network.
+- Polls no longer ask the charger what model it is, every time.
+- Slot devices are created with `via_device_id`. The `via_device` way is deprecated, and
+  stops working in Home Assistant 2027.8.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added

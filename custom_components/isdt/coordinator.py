@@ -167,6 +167,8 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                 read_metrics, self.host, self.port, self.info.model, self.info.channels
             )
         except CannotConnect as err:
+            # Home Assistant logs only the first failure in a row. This logs all of them.
+            _LOGGER.debug("%s: poll failed: %s", self.name, err)
             # Back off: 30 s, 1 min, 2 min, then every 5 minutes.
             self.update_interval = BACKOFF_INTERVALS[
                 min(self._failures, len(BACKOFF_INTERVALS) - 1)
