@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "cell_inserted": {
+        "default": "mdi:battery-outline",
+        "state": {
+          "off": "mdi:battery-off-outline"
+        }
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:battery-unknown",
@@ -24,11 +32,11 @@
           "shorted": "mdi:delete-alert"
         }
       },
-      "progress": {
-        "default": "mdi:battery-charging-high"
-      },
       "charged_capacity": {
         "default": "mdi:battery-plus-variant"
+      },
+      "charging_since": {
+        "default": "mdi:timer-play-outline"
       },
       "charging_time": {
         "default": "mdi:timer-outline"
@@ -44,6 +52,9 @@
           "zero_delta_v": "mdi:trending-neutral",
           "pre_charge_failed": "mdi:battery-alert-variant-outline"
         }
+      },
+      "total_current": {
+        "default": "mdi:current-dc"
       },
       "slots": {
         "default": "mdi:battery-outline"

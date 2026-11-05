@@ -91,6 +91,7 @@ SLOT_SENSORS: tuple[IsdtSlotSensorDescription, ...] = (
     ),
     IsdtSlotSensorDescription(
         key="progress",
+        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=_metric("progress"),
@@ -102,11 +103,19 @@ SLOT_SENSORS: tuple[IsdtSlotSensorDescription, ...] = (
         value=_metric("capacity or peak voltage"),
     ),
     IsdtSlotSensorDescription(
+        key="charging_since",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value=lambda slot: slot.charge_start,
+    ),
+    # Changes with every poll, so it fills the database. Charging since tells the same.
+    IsdtSlotSensorDescription(
         key="charging_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value=_metric("time"),
     ),
     IsdtSlotSensorDescription(
@@ -197,7 +206,7 @@ class IsdtSlotSensor(IsdtSlotEntity, SensorEntity):
 class IsdtChargerSensorDescription(SensorEntityDescription):
     """A value over all slots of the charger."""
 
-    value: Callable[[list[SlotState]], int | None]
+    value: Callable[[list[SlotState]], Any]
 
 
 def _count(category: str) -> Callable[[list[SlotState]], int]:
@@ -211,6 +220,20 @@ def _hottest(slots: list[SlotState]) -> int | None:
     return max(temperatures) if temperatures else None
 
 
+def _total_current(slots: list[SlotState]) -> float | None:
+    """What the charger puts into all cells together, in A."""
+    if not any(slot.metrics for slot in slots):
+        return None
+    return (
+        sum(
+            slot.metrics["charging current"]
+            for slot in slots
+            if slot.metrics and slot.status != STATUS_EMPTY
+        )
+        / 1000
+    )
+
+
 CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
     IsdtChargerSensorDescription(
         key="charger_temperature",
@@ -218,6 +241,14 @@ CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=_hottest,
+    ),
+    IsdtChargerSensorDescription(
+        key="total_current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        value=_total_current,
     ),
     IsdtChargerSensorDescription(
         key="slots",
@@ -264,6 +295,6 @@ class IsdtChargerSensor(IsdtChargerEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> Any:
         """The value."""
         return self.entity_description.value(self.coordinator.slots)

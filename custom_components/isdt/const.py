@@ -33,6 +33,10 @@ ALKALINE_RESISTANCE = 1000  # mΩ
 
 LONG_CHARGE = timedelta(hours=4)
 
+# The start of a charge is worked out from how long it has run. A start that differs more than
+# this from the one already known means the charger started over.
+CHARGE_START_TOLERANCE = timedelta(minutes=1)
+
 # Lower resistances are measurement glitches. Even a new NiMH cell reads over 100 mΩ.
 MIN_RESISTANCE = 50  # mΩ
 
