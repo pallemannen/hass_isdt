@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BATTERY_TYPES,
     CATEGORY_CHARGED,
     CATEGORY_CHARGING,
     CATEGORY_FREE,
@@ -76,6 +77,12 @@ SLOT_SENSORS: tuple[IsdtSlotSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=VERDICTS,
         value=lambda slot: slot.verdict,
+    ),
+    IsdtSlotSensorDescription(
+        key="battery_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(BATTERY_TYPES.values()),
+        value=lambda slot: slot.battery_type,
     ),
     IsdtSlotSensorDescription(
         key="voltage",

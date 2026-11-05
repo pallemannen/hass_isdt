@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Per slot: **Cell inserted**, **Charging** and **Problem** on/off sensors. Problem is on for invalid and rejected cells.
 - Per slot: **Charging since**, when the current charge started. A cell that finished before a restart keeps it.
+- Per slot: **Battery type**, as chosen for the slot on the charger. Only NiMH has been seen on the N24; the other types use the codes of the ISDT C4.
 - Charger: **Total current**, what the charger puts into all cells together.
 - The slots are put in the charger's area, and move with it. A slot put in another area on purpose stays there.
 - Blueprint **ISDT charger event**: runs actions on a charger event, all slots charged by default.
@@ -19,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Progress is a battery level, so it gets battery icons and works with battery cards.
+- The alkaline and worn checks only apply to nickel cells, or cells of unknown type. A pre-charge counts as possibly alkaline between 1.3 and 2.3 V, no longer at any voltage from 1.3 V, so a flat lithium cell isn't taken for an alkaline.
+- A completed charge counts for every battery type, not only NiMH, so `charged` and `all_charged` fire for lithium cells too.
 - Charging time is diagnostic, and disabled for new installations: it changes with every poll, and Charging since tells the same. Disable it by hand on an existing installation if you don't use it.
 
 ## [0.1.1] - 2026-11-04

@@ -23,6 +23,7 @@ The charger is a device, and each slot is a device of its own under it (`N24 Slo
 |---|---|
 | Status | Empty, idle, pre-charging, charging, charged, rejected |
 | Verdict | What to do with the cell, see below |
+| Battery type | NiMH, NiCd, NiZn, LiFe, LiHV, Li-ion, or Auto: the type chosen for the slot on the charger. Reported while charging, not during a pre-charge. Only NiMH has been seen so far; the other values are those of the ISDT C4, and not confirmed on the N24 yet. |
 | Voltage, current | Live values |
 | Cell inserted, Charging, Problem | On/off, for automations. Problem is on for invalid and rejected cells, see below. |
 | Progress | Estimated charge in percent while charging, 100 when done. A battery level, so battery cards show it. |
@@ -69,6 +70,8 @@ The verdict is per insertion: the charger can't tell one cell from another, so i
 | Remove: possibly alkaline | The cell behaves like an alkaline: the charger pre-charges it at a voltage no flat NiMH has, or its internal resistance is 1000 mΩ or more. Take it out; alkalines can leak when charged, and the charger retries them every few hours. Fires `remove_cell`. |
 | Trash: shorted | The cell stays at 0 V while being pre-charged. Fires `remove_cell`. |
 | Checking | Not enough information yet |
+
+The alkaline and worn checks are made for nickel cells. They apply to NiMH and NiCd, and while the type is not known, or set to Auto; not to a slot charging lithium or NiZn. A lithium cell that is pre-charged below 2.3 V is over-discharged, and is flagged as possibly alkaline too: take it out either way.
 
 The thresholds come from 85 charges of real cells. Expect to tune the worn limit. Cells need force to come out of the N24, which can briefly disconnect the neighbouring cells; the charger then re-detects them. Cells that already charged normally are not flagged because of that.
 

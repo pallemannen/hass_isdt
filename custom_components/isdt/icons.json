@@ -32,6 +32,9 @@
           "shorted": "mdi:delete-alert"
         }
       },
+      "battery_type": {
+        "default": "mdi:flask-outline"
+      },
       "charged_capacity": {
         "default": "mdi:battery-plus-variant"
       },

@@ -21,13 +21,14 @@ from .const import (
     ALKALINE_PRECHARGE_VOLTAGE,
     ALKALINE_RESISTANCE,
     BACKOFF_INTERVALS,
+    BATTERY_TYPES,
     CATEGORY_CHARGED,
     CATEGORY_CHARGING,
     CATEGORY_FREE,
     CATEGORY_INVALID,
     CATEGORY_REJECTED,
     CHARGE_START_TOLERANCE,
-    CHEMISTRY_NIMH,
+    CHEMISTRY_PRE_CHARGE_OR_REJECTED,
     CHEMISTRY_PRE_CHARGE,
     CHEMISTRY_REJECTED,
     CONF_WORN_RESISTANCE,
@@ -44,6 +45,7 @@ from .const import (
     MODE_CHARGED,
     MODE_CHARGING,
     MODE_IDLE,
+    NICKEL_TYPES,
     PRE_CHARGE_CURRENT,
     REMOVE_VERDICTS,
     REPAIR_LONG_CHARGE,
@@ -122,6 +124,7 @@ class SlotState:
     verdict: str | None = None
     termination: str | None = None
     resistance: int | None = None  # Last measured internal resistance, mΩ
+    battery_type: str | None = None  # Last reported, see BATTERY_TYPES
     charged_normally: bool = False  # Completed a normal charge since insertion
     flat_since: datetime | None = None
     charge_start: datetime | None = None
@@ -133,6 +136,7 @@ class SlotState:
         self.verdict = None
         self.termination = None
         self.resistance = None
+        self.battery_type = None
         self.charged_normally = False
         self.flat_since = None
         self.charge_start = None
@@ -255,6 +259,21 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                 slot.reset()
                 continue
 
+            # Only taken while the charger works on the cell: before that, the slot still
+            # reports the type of the cell before.
+            chemistry = metrics["chemistry id"]
+            if status not in (STATUS_CHARGING, STATUS_CHARGED):
+                pass
+            elif chemistry in BATTERY_TYPES:
+                slot.battery_type = BATTERY_TYPES[chemistry]
+            elif chemistry not in CHEMISTRY_PRE_CHARGE_OR_REJECTED:
+                _LOGGER.debug(
+                    "%s: slot %d reports battery type %s, never seen before",
+                    self.name,
+                    slot.number,
+                    chemistry,
+                )
+
             # After a bump, a cell that already charged is pre-charged again, and the
             # resistance it reports then is nonsense (seen: 29 and 5208 mΩ).
             if metrics["resistance"] >= MIN_RESISTANCE and not (
@@ -270,7 +289,7 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                 )
                 if (
                     not slot.charged_normally
-                    and metrics["chemistry id"] == CHEMISTRY_NIMH
+                    and metrics["chemistry id"] in BATTERY_TYPES
                     and (slot.resistance is None or slot.resistance < ALKALINE_RESISTANCE)
                 ):
                     slot.charged_normally = True
@@ -355,8 +374,8 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                 slot.flat_since = None
 
             # A cell that already charged normally was only bumped, and re-detected.
-            if not slot.charged_normally and (
-                voltage >= ALKALINE_PRECHARGE_VOLTAGE
+            if not slot.charged_normally and self._may_be_alkaline(slot) and (
+                ALKALINE_PRECHARGE_VOLTAGE[0] <= voltage < ALKALINE_PRECHARGE_VOLTAGE[1]
                 or (
                     ALKALINE_FLAT_VOLTAGE[0] <= voltage < ALKALINE_FLAT_VOLTAGE[1]
                     and (slot.resistance or 0) >= ALKALINE_RESISTANCE
@@ -368,7 +387,11 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
 
         # No healthy NiMH comes close to this. Alkalines do, whether the charger stops after a
         # short pulse, or refuses them right away.
-        if not slot.charged_normally and (slot.resistance or 0) >= ALKALINE_RESISTANCE:
+        if (
+            not slot.charged_normally
+            and self._may_be_alkaline(slot)
+            and (slot.resistance or 0) >= ALKALINE_RESISTANCE
+        ):
             return VERDICT_POSSIBLE_ALKALINE
 
         if status == STATUS_REJECTED and not slot.charged_normally:
@@ -376,9 +399,14 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
 
         if slot.resistance is None:
             return VERDICT_CHECKING
-        if slot.resistance >= self.worn_resistance:
+        if slot.resistance >= self.worn_resistance and self._may_be_alkaline(slot):
             return VERDICT_WORN
         return VERDICT_GOOD
+
+    @staticmethod
+    def _may_be_alkaline(slot: SlotState) -> bool:
+        """Whether the nickel checks apply: the cell is a nickel cell, or its type unknown."""
+        return slot.battery_type is None or slot.battery_type in NICKEL_TYPES
 
     @staticmethod
     def _event_attributes(slot: SlotState) -> dict[str, Any]:
