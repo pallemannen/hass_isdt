@@ -31,6 +31,7 @@ async def async_get_config_entry_diagnostics(
                 "termination": slot.termination,
                 "resistance": slot.resistance,
                 "charged_normally": slot.charged_normally,
+                "charge_start": slot.charge_start,
                 "metrics": slot.metrics,
             }
             for slot in coordinator.slots

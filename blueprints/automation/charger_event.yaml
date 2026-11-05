@@ -1,0 +1,69 @@
+blueprint:
+  name: ISDT charger event
+  description: >-
+    Runs your actions when an ISDT charger reports an event: all slots charged (the default),
+    a slot charged, a cell that must come out, or an unusually long charge.
+
+
+    The actions can use `event_type`, `charger` (the charger's name), `slot`, `verdict`,
+    `capacity` (mAh), `resistance` (mΩ), and, for all slots charged, `charged_slots` (a list of
+    slot numbers).
+  domain: automation
+  source_url: https://github.com/pallemannen/hass_isdt/blob/main/blueprints/automation/charger_event.yaml
+  input:
+    charger_event:
+      name: Charger event entity
+      selector:
+        entity:
+          filter:
+            - integration: isdt
+              domain: event
+    event_types:
+      name: Events
+      default:
+        - all_charged
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: All slots charged
+              value: all_charged
+            - label: Slot charged
+              value: charged
+            - label: Remove cell
+              value: remove_cell
+            - label: Unusually long charge
+              value: long_charge
+    actions:
+      name: Actions
+      default: []
+      selector:
+        action: {}
+
+mode: queued
+
+triggers:
+  - trigger: state
+    entity_id: !input charger_event
+
+variables:
+  event_types: !input event_types
+  event_type: "{{ trigger.to_state.attributes.event_type }}"
+  charger: "{{ device_attr(device_id(trigger.entity_id), 'name') }}"
+  slot: "{{ trigger.to_state.attributes.slot }}"
+  verdict: "{{ trigger.to_state.attributes.verdict }}"
+  capacity: "{{ trigger.to_state.attributes.capacity }}"
+  resistance: "{{ trigger.to_state.attributes.resistance }}"
+  charged_slots: "{{ trigger.to_state.attributes.charged_slots }}"
+
+conditions:
+  # The entity also changes when Home Assistant starts, and when the charger goes away and
+  # comes back. Only a new event counts. (Before the very first event, the entity is unknown.)
+  - condition: template
+    value_template: >-
+      {{ trigger.from_state is not none
+         and trigger.from_state.state != 'unavailable'
+         and trigger.to_state.state not in ['unavailable', 'unknown']
+         and event_type in event_types }}
+
+actions: !input actions

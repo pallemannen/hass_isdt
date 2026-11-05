@@ -50,6 +50,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "cell_inserted": {
+        "name": "Cell inserted"
+      },
+      "charging": {
+        "name": "Charging"
+      },
+      "problem": {
+        "name": "Problem"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -86,6 +97,9 @@
       "charged_capacity": {
         "name": "Charged capacity"
       },
+      "charging_since": {
+        "name": "Charging since"
+      },
       "charging_time": {
         "name": "Charging time"
       },
@@ -107,6 +121,9 @@
       },
       "internal_temperature": {
         "name": "Charger temperature"
+      },
+      "total_current": {
+        "name": "Total current"
       },
       "slots": {
         "name": "Slots"

@@ -26,6 +26,7 @@ from .const import (
     CATEGORY_FREE,
     CATEGORY_INVALID,
     CATEGORY_REJECTED,
+    CHARGE_START_TOLERANCE,
     CHEMISTRY_NIMH,
     CHEMISTRY_PRE_CHARGE,
     CHEMISTRY_REJECTED,
@@ -123,6 +124,7 @@ class SlotState:
     resistance: int | None = None  # Last measured internal resistance, mΩ
     charged_normally: bool = False  # Completed a normal charge since insertion
     flat_since: datetime | None = None
+    charge_start: datetime | None = None
     remove_reported: bool = False
     long_charge_reported: bool = False
 
@@ -133,6 +135,7 @@ class SlotState:
         self.resistance = None
         self.charged_normally = False
         self.flat_since = None
+        self.charge_start = None
         self.remove_reported = False
         self.long_charge_reported = False
 
@@ -274,6 +277,7 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                     first_completion = True
             elif status in (STATUS_CHARGING, STATUS_PRE_CHARGE):
                 slot.termination = None
+                self._track_charge_start(slot, metrics, now)
 
             slot.verdict = self._verdict(slot, metrics, status, now)
 
@@ -316,6 +320,21 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                     ]
                 },
             )
+
+    @staticmethod
+    def _track_charge_start(slot: SlotState, metrics: dict[str, Any], now: datetime) -> None:
+        """When the current charge started, from how long it has been running.
+
+        Each poll gives a slightly different start, as the poll itself takes time, so the start
+        only moves when the charger starts over. A cell that already charged normally was only
+        bumped, and keeps the start of its real charge.
+        """
+        start = (now - timedelta(seconds=metrics["time"])).replace(microsecond=0)
+        if slot.charge_start is None or (
+            not slot.charged_normally
+            and abs(start - slot.charge_start) > CHARGE_START_TOLERANCE
+        ):
+            slot.charge_start = start
 
     def _verdict(
         self, slot: SlotState, metrics: dict[str, Any], status: str, now: datetime

@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-05
+
+### Added
+- Per slot: **Cell inserted**, **Charging** and **Problem** on/off sensors. Problem is on for invalid and rejected cells.
+- Per slot: **Charging since**, when the current charge started.
+- Charger: **Total current**, what the charger puts into all cells together.
+- The slots are put in the charger's area, and move with it. A slot put in another area on purpose stays there.
+- Blueprint **ISDT charger event**: runs actions on a charger event, all slots charged by default.
+- Tests, replaying the logged replies of an N24 during 85 charges of real cells. They run on GitHub.
+- README: tested models, related projects, disclaimer.
+
+### Changed
+- Progress is a battery level, so it gets battery icons and works with battery cards.
+- Charging time is diagnostic, and disabled for new installations: it changes with every poll, and Charging since tells the same. Disable it by hand on an existing installation if you don't use it.
+
 ## [0.1.1] - 2026-11-04
 
 ### Added
