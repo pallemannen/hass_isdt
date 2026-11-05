@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - README: tested models, related projects, disclaimer.
 
 ### Changed
+- Requires isdttool-pal 2.0.0, whose bridge carries packets instead of USB reports. Update the bridge (`isdttool serve`) to 2.0.0 too, at the same time.
 - Progress is a battery level, so it gets battery icons and works with battery cards.
 - The alkaline and worn checks only apply to nickel cells, or cells of unknown type. A pre-charge counts as possibly alkaline between 1.3 and 2.3 V, no longer at any voltage from 1.3 V, so a flat lithium cell isn't taken for an alkaline.
 - A completed charge counts for every battery type, not only NiMH, so `charged` and `all_charged` fire for lithium cells too.
