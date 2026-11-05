@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -22,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CATEGORY_CHARGED,
@@ -33,6 +36,7 @@ from .const import (
     STATUS_CHARGING,
     STATUS_EMPTY,
     STATUS_PRE_CHARGE,
+    STATUS_REJECTED,
     STATUSES,
     TERMINATION_UNKNOWN,
     TERMINATIONS,
@@ -163,7 +167,11 @@ async def async_setup_entry(
         IsdtChargerSensor(coordinator, description) for description in CHARGER_SENSORS
     ]
     entities.extend(
-        IsdtSlotSensor(coordinator, slot, description)
+        (
+            IsdtChargingSinceSensor
+            if description.key == "charging_since"
+            else IsdtSlotSensor
+        )(coordinator, slot, description)
         for slot in coordinator.slots
         for description in SLOT_SENSORS
     )
@@ -200,6 +208,34 @@ class IsdtSlotSensor(IsdtSlotEntity, SensorEntity):
     def native_value(self) -> Any:
         """The value."""
         return self.entity_description.value(self.slot)
+
+
+class IsdtChargingSinceSensor(IsdtSlotSensor, RestoreSensor):
+    """When the current charge started.
+
+    The start is only known by watching the charge. For a cell that finished before Home
+    Assistant started, it is taken from before the restart.
+    """
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the start of a finished charge."""
+        await super().async_added_to_hass()
+        slot = self.slot
+        if slot.charge_start is not None or slot.status not in (
+            STATUS_CHARGED,
+            STATUS_REJECTED,
+        ):
+            return
+        if (last := await self.async_get_last_sensor_data()) is None:
+            return
+        start = last.native_value
+        if not isinstance(start, datetime):
+            return
+        # A start later than the charge allows belongs to another cell, swapped meanwhile.
+        if start > dt_util.utcnow() - timedelta(seconds=slot.metrics.get("time", 0)):
+            return
+        slot.charge_start = start
+        self.async_write_ha_state()
 
 
 @dataclass(frozen=True, kw_only=True)

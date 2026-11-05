@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.util import dt as dt_util
 
 from custom_components.isdt.const import DOMAIN
 
@@ -96,5 +102,42 @@ async def test_slots_follow_area(hass: HomeAssistant, config_entry: MockConfigEn
     await hass.async_block_till_done()
     assert device_registry.async_get(slots[0].id).area_id == shelf.id
     assert {device_registry.async_get(slot.id).area_id for slot in slots[1:]} == {office.id}
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+def _restored_start(entity_id: str, start: datetime) -> tuple[State, dict]:
+    return (
+        State(entity_id, start.isoformat()),
+        {
+            "native_value": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": start.isoformat(),
+            },
+            "native_unit_of_measurement": None,
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_charger")
+async def test_charging_since_restored(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A cell that finished before Home Assistant started keeps the start of its charge."""
+    start = datetime(2026, 11, 3, 20, 0, tzinfo=UTC)
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            _restored_start("sensor.n24_slot_02_charging_since", start),
+            # Later than its charge allows: from another cell, swapped meanwhile.
+            _restored_start("sensor.n24_slot_05_charging_since", dt_util.utcnow()),
+        ),
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.n24_slot_02_charging_since").state == start.isoformat()
+    assert hass.states.get("sensor.n24_slot_05_charging_since").state == "unknown"
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
