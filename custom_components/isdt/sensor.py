@@ -195,16 +195,30 @@ class IsdtSlotSensor(IsdtSlotEntity, SensorEntity):
 
 @dataclass(frozen=True, kw_only=True)
 class IsdtChargerSensorDescription(SensorEntityDescription):
-    """A count over all slots of the charger."""
+    """A value over all slots of the charger."""
 
-    value: Callable[[list[SlotState]], int]
+    value: Callable[[list[SlotState]], int | None]
 
 
 def _count(category: str) -> Callable[[list[SlotState]], int]:
     return lambda slots: sum(slot_category(slot) == category for slot in slots)
 
 
+def _hottest(slots: list[SlotState]) -> int | None:
+    """The charger measures its own temperature at several points, reported per slot. While
+    charging, they differ by a few degrees; the hottest is what matters."""
+    temperatures = [slot.metrics["internal_temperature"] for slot in slots if slot.metrics]
+    return max(temperatures) if temperatures else None
+
+
 CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
+    IsdtChargerSensorDescription(
+        key="charger_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value=_hottest,
+    ),
     IsdtChargerSensorDescription(
         key="slots",
         value=len,
@@ -238,7 +252,7 @@ CHARGER_SENSORS: tuple[IsdtChargerSensorDescription, ...] = (
 
 
 class IsdtChargerSensor(IsdtChargerEntity, SensorEntity):
-    """A count over all slots of the charger."""
+    """A value over all slots of the charger."""
 
     entity_description: IsdtChargerSensorDescription
 
@@ -250,6 +264,6 @@ class IsdtChargerSensor(IsdtChargerEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> int:
-        """The count."""
+    def native_value(self) -> int | None:
+        """The value."""
         return self.entity_description.value(self.coordinator.slots)
