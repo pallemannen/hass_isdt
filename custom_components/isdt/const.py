@@ -26,8 +26,10 @@ SHORTED_VOLTAGE = 100  # mV
 SHORTED_DURATION = timedelta(minutes=10)
 
 # An alkaline cell that the charger mistakes for a rechargeable shows up as a pre-charge at a
-# voltage no flat NiMH has, or as a nearly flat cell with a very high resistance.
-ALKALINE_PRECHARGE_VOLTAGE = 1300  # mV
+# voltage no flat NiMH has, or as a nearly flat cell with a very high resistance. Under the
+# pre-charge current, alkalines were seen at up to 1.97 V. A lithium cell is pre-charged when it
+# is flat, at 2.5 V or more; one below 2.3 V is over-discharged, and better taken out, too.
+ALKALINE_PRECHARGE_VOLTAGE = (1300, 2300)  # mV
 ALKALINE_FLAT_VOLTAGE = (300, 1000)  # mV
 ALKALINE_RESISTANCE = 1000  # mΩ
 
@@ -47,6 +49,24 @@ MODE_CHARGED = 4
 CHEMISTRY_PRE_CHARGE = 4
 CHEMISTRY_REJECTED = 6
 CHEMISTRY_NIMH = 9
+CHEMISTRY_PRE_CHARGE_OR_REJECTED = (CHEMISTRY_PRE_CHARGE, CHEMISTRY_REJECTED)
+
+# The battery type, as chosen for the slot on the charger, or detected with Auto. The N24 has
+# only been seen to report NiMH (9) while charging. The other codes are those of the ISDT C4,
+# which uses the same field; they are likely, but not confirmed for the N24. While pre-charging
+# (4) or after rejecting a cell (6), the charger doesn't report the type.
+BATTERY_TYPES = {
+    0: "auto",
+    1: "lihv",
+    2: "li_ion",
+    3: "life",
+    5: "nizn",
+    8: "nicd",
+    9: "nimh",
+}
+# The alkaline, and worn, checks are made for nickel cells. They also apply while the type is
+# not known, or Auto, as an alkaline is reported as a nickel cell, or not at all.
+NICKEL_TYPES = ("auto", "nicd", "nimh")
 DIMENSIONS_EMPTY = 4
 PRE_CHARGE_CURRENT = 200  # mA. Pre-charge runs at about 100 mA, normal charging at about 1 A.
 

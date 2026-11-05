@@ -85,6 +85,18 @@
           "shorted": "Trash: shorted"
         }
       },
+      "battery_type": {
+        "name": "Battery type",
+        "state": {
+          "auto": "Auto",
+          "lihv": "LiHV",
+          "li_ion": "Li-ion",
+          "life": "LiFe",
+          "nizn": "NiZn",
+          "nicd": "NiCd",
+          "nimh": "NiMH"
+        }
+      },
       "voltage": {
         "name": "Voltage"
       },
