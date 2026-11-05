@@ -1,5 +1,7 @@
 # ISDT Charger for Home Assistant
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=hass_isdt&owner=pallemannen)
+
 Monitors an ISDT battery charger, slot by slot. Developed with the ISDT N24 (24 slots, NiMH and NiCd, AA and AAA); other ISDT chargers that [isdttool](https://github.com/pallemannen/isdttool) supports may work too.
 
 The charger is reached through an isdttool bridge, so it can be plugged into any machine on the network, for example a Raspberry Pi next to it. The integration only reads from the charger; it never changes anything on it.
