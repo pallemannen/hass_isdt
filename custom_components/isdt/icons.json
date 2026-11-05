@@ -1,0 +1,69 @@
+{
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:battery-unknown",
+        "state": {
+          "empty": "mdi:battery-off-outline",
+          "idle": "mdi:battery-outline",
+          "pre_charge": "mdi:battery-charging-outline",
+          "charging": "mdi:battery-charging-50",
+          "charged": "mdi:battery-check",
+          "rejected": "mdi:battery-remove",
+          "unknown": "mdi:battery-unknown"
+        }
+      },
+      "verdict": {
+        "default": "mdi:battery-heart-variant",
+        "state": {
+          "checking": "mdi:battery-sync",
+          "good": "mdi:battery-heart-variant",
+          "worn": "mdi:battery-alert-variant-outline",
+          "rejected": "mdi:battery-remove-outline",
+          "possible_alkaline": "mdi:battery-alert",
+          "shorted": "mdi:delete-alert"
+        }
+      },
+      "progress": {
+        "default": "mdi:battery-charging-high"
+      },
+      "charged_capacity": {
+        "default": "mdi:battery-plus-variant"
+      },
+      "charging_time": {
+        "default": "mdi:timer-outline"
+      },
+      "resistance": {
+        "default": "mdi:omega"
+      },
+      "termination": {
+        "default": "mdi:battery-check-outline",
+        "state": {
+          "voltage_limit": "mdi:arrow-collapse-up",
+          "minus_delta_v": "mdi:trending-down",
+          "zero_delta_v": "mdi:trending-neutral",
+          "pre_charge_failed": "mdi:battery-alert-variant-outline"
+        }
+      },
+      "charging_slots": {
+        "default": "mdi:battery-charging"
+      }
+    },
+    "event": {
+      "charger_event": {
+        "default": "mdi:bell-ring-outline",
+        "state_attributes": {
+          "event_type": {
+            "default": "mdi:bell-ring-outline",
+            "state": {
+              "charged": "mdi:battery-check",
+              "all_charged": "mdi:check-all",
+              "remove_cell": "mdi:battery-alert",
+              "long_charge": "mdi:timer-alert-outline"
+            }
+          }
+        }
+      }
+    }
+  }
+}
