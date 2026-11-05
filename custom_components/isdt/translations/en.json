@@ -127,5 +127,19 @@
         }
       }
     }
+  },
+  "issues": {
+    "possible_alkaline": {
+      "title": "Remove the cell from {charger} slot {slot}",
+      "description": "The charger is charging the cell in slot {slot} as if it were rechargeable, but it behaves like an alkaline. Alkaline cells can leak, or burst, when charged. Take it out now.\n\nThis goes away once the slot is empty."
+    },
+    "shorted": {
+      "title": "Shorted cell in {charger} slot {slot}",
+      "description": "The cell in slot {slot} stays at 0 V while the charger pre-charges it, so it is shorted inside. It turns the charging current into heat. Take it out, and recycle it.\n\nThis goes away once the slot is empty."
+    },
+    "long_charge": {
+      "title": "Unusually long charge in {charger} slot {slot}",
+      "description": "The cell in slot {slot} has been charging for more than 4 hours. A normal AA or AAA charge on the N24 takes less than 2. Check that the cell is a NiMH or NiCd, and that it isn't getting hot.\n\nThis goes away once charging stops."
+    }
   }
 }

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Icons for all entities. Status, verdict, why charging stopped, and the charger event change icon with their state.
+- Repairs for hazardous cells: an alkaline that is being charged, and a shorted cell (both errors), and a charge that runs for more than 4 hours (warning). A repair goes away by itself once the slot is empty, or charging stops.
 
 ## [0.1.0] - 2026-11-04
 

@@ -30,6 +30,8 @@ The charger device has a **Charging slots** count, and a **Charger event** entit
 - `remove_cell`: a cell must come out (see below).
 - `long_charge`: a charge has run for 4 hours.
 
+A cell that is a hazard also raises a repair under **Settings → Repairs**: an alkaline that is being charged, or a shorted cell (errors), and a charge running for more than 4 hours (warning). The repair goes away by itself once the slot is empty, or charging stops.
+
 The slot number, verdict, capacity and so on are in the event's attributes. Use them in automations, for example to send a notification.
 
 ### Verdict

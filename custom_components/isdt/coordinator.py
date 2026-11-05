@@ -11,6 +11,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -39,6 +40,10 @@ from .const import (
     MODE_IDLE,
     PRE_CHARGE_CURRENT,
     REMOVE_VERDICTS,
+    REPAIR_LONG_CHARGE,
+    REPAIR_POSSIBLE_ALKALINE,
+    REPAIR_SEVERITY,
+    REPAIR_SHORTED,
     SHORTED_DURATION,
     SHORTED_VOLTAGE,
     STATUS_CHARGED,
@@ -173,7 +178,45 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
         self.update_interval = self.interval
         self._process(metrics, dt_util.utcnow())
         self._first = False
+        self._sync_repairs()
         return self.slots
+
+    def _issue_id(self, kind: str, slot: SlotState) -> str:
+        return f"{self.config_entry.entry_id}_slot_{slot.number:02d}_{kind}"
+
+    def _sync_repairs(self) -> None:
+        """Raise a repair for each cell that is a hazard, and withdraw it once it is gone.
+
+        Runs after every poll, so issues left over from before a restart are withdrawn, or
+        kept, according to what is in the charger now.
+        """
+        for slot in self.slots:
+            wanted = {
+                REPAIR_POSSIBLE_ALKALINE: slot.verdict == VERDICT_POSSIBLE_ALKALINE,
+                REPAIR_SHORTED: slot.verdict == VERDICT_SHORTED,
+                REPAIR_LONG_CHARGE: slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE)
+                and timedelta(seconds=slot.metrics["time"]) >= LONG_CHARGE
+                and slot.verdict not in REMOVE_VERDICTS,
+            }
+            for kind, raise_it in wanted.items():
+                issue_id = self._issue_id(kind, slot)
+                if raise_it:
+                    ir.async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        issue_id,
+                        is_fixable=False,
+                        is_persistent=False,
+                        severity=ir.IssueSeverity(REPAIR_SEVERITY[kind]),
+                        translation_key=kind,
+                        translation_placeholders={
+                            "charger": self.config_entry.title,
+                            "slot": str(slot.number),
+                        },
+                    )
+                else:
+                    ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
 
     def _process(self, all_metrics: list[dict[str, Any]], now: datetime) -> None:
 
