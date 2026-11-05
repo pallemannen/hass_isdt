@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from .api import CannotConnect, get_info
 from .const import DOMAIN
 from .coordinator import IsdtConfigEntry, IsdtCoordinator
+from .entity import slot_identifier
 
 PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
@@ -34,7 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsdtConfigEntry) -> bool
     entry.runtime_data = coordinator
 
     # The charger device first, so that the slot devices can refer to it.
-    dr.async_get(hass).async_get_or_create(
+    device_registry = dr.async_get(hass)
+    charger = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
         manufacturer="ISDT",
@@ -49,6 +51,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsdtConfigEntry) -> bool
         sw_version=info.app_version,
         serial_number=info.serial,
     )
+
+    # Each slot is a device of its own, under the charger.
+    for slot in coordinator.slots:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, slot_identifier(coordinator, slot))},
+            name=f"{entry.title} Slot {slot.number:02d}",
+            manufacturer="ISDT",
+            model=f"{info.model} slot",
+            via_device_id=charger.id,
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

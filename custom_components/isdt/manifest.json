@@ -13,7 +13,7 @@
     "isdttool"
   ],
   "requirements": [
-    "isdttool-pal>=1.1.0"
+    "isdttool-pal>=1.1.2"
   ],
   "version": "0.1.0"
 }
