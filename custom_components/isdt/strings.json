@@ -23,6 +23,10 @@
           "host": "Host name or IP address of the machine running the bridge.",
           "port": "TCP port of the bridge."
         }
+      },
+      "zeroconf_confirm": {
+        "title": "ISDT charger",
+        "description": "Set up {name}, found on the network through an isdttool bridge?"
       }
     },
     "error": {

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-05
+
+### Added
+- Chargers are discovered on the network over mDNS/zeroconf: a bridge running isdttool-pal
+  2.1.0 or later advertises itself, and Home Assistant offers the charger to set up without
+  asking for its address. A charger already set up keeps working, and a bridge that moved to a
+  new address is followed.
+
+### Changed
+- Requires isdttool-pal 2.1.0, whose bridge advertises itself. Update the bridge
+  (`isdttool serve`) to 2.1.0 too.
+
 ## [0.2.0] - 2026-11-05
 
 ### Added

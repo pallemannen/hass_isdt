@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import CannotConnect, ChargerInfo, get_info
 from .const import (
@@ -46,6 +47,10 @@ class IsdtConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        self._discovered: dict[str, Any] = {}
+        self._discovered_name: str | None = None
+
     async def _async_probe(
         self, user_input: dict[str, Any], errors: dict[str, str]
     ) -> ChargerInfo | None:
@@ -80,6 +85,49 @@ class IsdtConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 _connection_schema(), user_input or {}
             ),
+            errors=errors,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """A bridge advertised a charger on the network (see the isdttool docs, zeroconf.md)."""
+        host = str(discovery_info.ip_address)
+        port = discovery_info.port or DEFAULT_PORT
+        serial = discovery_info.properties.get("serial")
+        model = discovery_info.properties.get("model")
+
+        # The bridge advertises the same serial a client reads over the link, so a charger that
+        # is already set up — by hand or by an earlier discovery — is recognised here, and its
+        # address is updated if the bridge moved.
+        if serial:
+            await self.async_set_unique_id(serial)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: host, CONF_PORT: port}
+            )
+
+        self._discovered = {CONF_HOST: host, CONF_PORT: port}
+        self._discovered_name = model or "ISDT charger"
+        self.context["title_placeholders"] = {"name": self._discovered_name}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm a discovered charger, then probe it to identify it for real."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            info = await self._async_probe(self._discovered, errors)
+            if info is not None:
+                await self.async_set_unique_id(
+                    _unique_id(info, self._discovered[CONF_HOST], self._discovered[CONF_PORT])
+                )
+                self._abort_if_unique_id_configured(updates=self._discovered)
+                return self.async_create_entry(title=f"{info.model}", data=self._discovered)
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={"name": self._discovered_name or "ISDT charger"},
             errors=errors,
         )
 
