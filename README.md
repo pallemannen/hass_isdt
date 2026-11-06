@@ -9,6 +9,7 @@ Monitors an ISDT battery charger, slot by slot. Developed with the ISDT N24 (24 
 | Model | Connection | Tested by |
 |---|---|---|
 | N24 (24 slots, NiMH and NiCd, AA and AAA) | USB | Maintainer |
+| N8, N16 (8/16 slots, NiMH and NiCd, AA and AAA) | USB | Untested, but believed to work |
 | A4, C4, C4 EVO, Q8 | USB | Not yet. isdttool reads them, but the slot logic is built on what the N24 reports. |
 
 If yours works, or doesn't, please [open an issue](https://github.com/pallemannen/hass_isdt/issues).
