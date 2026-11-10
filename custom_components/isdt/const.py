@@ -51,10 +51,11 @@ CHEMISTRY_REJECTED = 6
 CHEMISTRY_NIMH = 9
 CHEMISTRY_PRE_CHARGE_OR_REJECTED = (CHEMISTRY_PRE_CHARGE, CHEMISTRY_REJECTED)
 
-# The battery type, as chosen for the slot on the charger, or detected with Auto. The N24 has
-# only been seen to report NiMH (9) while charging. The other codes are those of the ISDT C4,
-# which uses the same field; they are likely, but not confirmed for the N24. While pre-charging
-# (4) or after rejecting a cell (6), the charger doesn't report the type.
+# The battery type, as set on the charger (one setting for all slots), or detected with Auto.
+# On the N24, Auto charges nickel cells as NiMH (9); set to NiCd, they are NiCd (8) (seen
+# 2026-11-10). The other codes are those of the ISDT C4, which uses the same field; they are
+# likely, but not confirmed for the N24. While pre-charging (4) or after rejecting a cell (6),
+# the charger doesn't report the type.
 BATTERY_TYPES = {
     0: "auto",
     1: "lihv",
