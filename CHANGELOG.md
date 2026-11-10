@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- The N24 reports NiCd (8) when the charger's battery type is set to NiCd (confirmed; on Auto, nickel cells are NiMH).
+
 ## [0.3.0] - 2026-11-05
 
 ### Added
