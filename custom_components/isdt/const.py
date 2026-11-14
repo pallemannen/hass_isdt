@@ -71,9 +71,8 @@ NICKEL_TYPES = ("auto", "nicd", "nimh")
 
 # A battery type that doesn't fit the cell: the charger has one type setting for all slots, so a
 # batch of another chemistry is easily charged as the last one.
-# A NiZn cell rests at about 1.6-1.8 V. On Auto, or NiMH, the N24 takes it for a full NiMH and
-# rejects it (seen 2026-11-13); an alkaline can read the same once rejected.
-NIZN_REJECTED_VOLTAGE = (1600, 1900)  # mV
+# On Auto the N24 rejects NiZn cells (seen 2026-11-13, at 1.65-1.73 V). That is no hint on its
+# own: rejected alkalines, NiCd and bumped NiMH read 1.57-1.86 V in the logs.
 # What each type reads early in a charge, at about 1 A (mV). A cell outside it is most likely
 # charged as the wrong type. Wide on purpose: only a clear misfit counts.
 TYPE_CHARGE_VOLTAGE = {
@@ -162,11 +161,8 @@ EVENT_TYPES = [EVENT_CHARGED, EVENT_ALL_CHARGED, EVENT_REMOVE_CELL, EVENT_LONG_C
 REPAIR_POSSIBLE_ALKALINE = "possible_alkaline"
 REPAIR_SHORTED = "shorted"
 REPAIR_LONG_CHARGE = "long_charge"
-REPAIR_MAYBE_NIZN = "maybe_nizn"
 REPAIR_WRONG_TYPE = "wrong_type"
 REPAIR_SEVERITY = {
-    # A hint: the cell is refused, so nothing happens to it.
-    REPAIR_MAYBE_NIZN: "warning",
     # Charged as the wrong chemistry, a cell is charged to the wrong voltage.
     REPAIR_WRONG_TYPE: "error",
     # Alkalines can leak, or burst, when charged.

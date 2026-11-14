@@ -17,8 +17,6 @@ from homeassistant.util import dt as dt_util
 
 from .api import CannotConnect, ChargerInfo, read_metrics
 from .const import (
-    NIZN_REJECTED_VOLTAGE,
-    REPAIR_MAYBE_NIZN,
     REPAIR_WRONG_TYPE,
     TYPE_CHARGE_VOLTAGE,
     TYPE_CHECK_WINDOW,
@@ -151,14 +149,6 @@ class SlotState:
         self.long_charge_reported = False
         self.start_voltage = None
 
-    def suspects_nizn(self) -> bool:
-        """Refused at the voltage of a NiZn cell, as Auto and NiMH do with them."""
-        return (
-            self.status == STATUS_REJECTED
-            and not self.charged_normally
-            and NIZN_REJECTED_VOLTAGE[0] <= self.metrics.get("charging voltage", 0) <= NIZN_REJECTED_VOLTAGE[1]
-        )
-
     def mismatched_type(self) -> bool:
         """Charging as a type whose voltage the cell clearly doesn't have."""
         expected = TYPE_CHARGE_VOLTAGE.get(self.battery_type or "")
@@ -249,7 +239,6 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
             wanted = {
                 REPAIR_POSSIBLE_ALKALINE: slot.verdict == VERDICT_POSSIBLE_ALKALINE,
                 REPAIR_SHORTED: slot.verdict == VERDICT_SHORTED,
-                REPAIR_MAYBE_NIZN: slot.suspects_nizn(),
                 REPAIR_WRONG_TYPE: slot.mismatched_type(),
                 REPAIR_LONG_CHARGE: slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE)
                 and timedelta(seconds=slot.metrics["time"]) >= LONG_CHARGE

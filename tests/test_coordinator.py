@@ -150,50 +150,31 @@ async def test_lithium(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert "remove_cell" not in events
 
 
-async def test_battery_type_hints(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """A cell that doesn't fit the charger's battery type raises a repair (agreed 2026-11-13).
+async def test_wrong_battery_type(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """A cell whose voltage doesn't fit the type it is charged as raises a repair.
 
-    NiZn cells on Auto were refused at 1.65-1.73 V; set to NiZn they charged at about 1.75 V.
-    A NiMH cell charged as NiZn reads well under that.
+    NiZn cells set to NiZn charged at about 1.75 V (2026-11-13); a NiMH cell charged as NiZn reads
+    well under that.
     """
     config_entry.add_to_hass(hass)
     coordinator = IsdtCoordinator(hass, config_entry, INFO)
     now, metrics = load_polls("batch1.log.gz")[894]
-    empties = [m for m in metrics if m["dimensions id"] == 4]
+    empty = next(m for m in metrics if m["dimensions id"] == 4)
+    number = empty["channel"] + 1
     coordinator._process(metrics, now)
     coordinator._first = False
-    issues = ir.async_get(hass)
+    issue_id = f"{config_entry.entry_id}_slot_{number:02d}_wrong_type"
 
-    def poll(empty: dict[str, Any], minutes: int, **values: int) -> SlotState:
-        number = empty["channel"] + 1
-        metrics[number - 1] = {**empty, "dimensions id": 1, "resistance": 0, **values}
+    def poll(minutes: int, **values: int) -> bool:
+        metrics[number - 1] = {**empty, **values}
         coordinator._process(metrics, now + timedelta(minutes=minutes))
         coordinator._sync_repairs()
-        return coordinator.slots[number - 1]
+        return ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
 
-    def raised(slot: SlotState, kind: str) -> bool:
-        issue_id = f"{config_entry.entry_id}_slot_{slot.number:02d}_{kind}"
-        return issues.async_get_issue(DOMAIN, issue_id) is not None
-
-    nizn = empties[0]
-    slot = poll(nizn, 1, **{"mode id": 0, "chemistry id": 6, "charging voltage": 1716})
-    assert slot.status == "rejected"
-    assert raised(slot, "maybe_nizn")
-    # Set to NiZn and put back: it charges, and fits.
-    slot = poll(nizn, 2, **{"mode id": 3, "chemistry id": 5, "charging voltage": 1750,
-                            "charging current": 1000, "progress": 90, "time": 60,
-                            "resistance": 203})
-    assert slot.battery_type == "nizn"
-    assert not raised(slot, "maybe_nizn")
-    assert not raised(slot, "wrong_type")
-
-    nimh = empties[1]
-    slot = poll(nimh, 3, **{"mode id": 3, "chemistry id": 5, "charging voltage": 1380,
-                            "charging current": 1000, "progress": 80, "time": 60,
-                            "resistance": 180})
-    assert raised(slot, "wrong_type")
-    # Taken out: the repair goes.
-    metrics[nimh["channel"]] = nimh
-    coordinator._process(metrics, now + timedelta(minutes=4))
-    coordinator._sync_repairs()
-    assert not raised(slot, "wrong_type")
+    charging = {"dimensions id": 1, "mode id": 3, "chemistry id": 5, "charging current": 1000,
+                "progress": 90, "time": 60, "resistance": 200}
+    assert not poll(1, **charging, **{"charging voltage": 1750})
+    assert coordinator.slots[number - 1].battery_type == "nizn"
+    assert not poll(2)  # emptied
+    assert poll(3, **charging, **{"charging voltage": 1380})
+    assert not poll(4)  # emptied: the repair goes
