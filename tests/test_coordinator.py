@@ -148,3 +148,37 @@ async def test_lithium(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert slot.status == "charged"
     assert "charged" in events
     assert "remove_cell" not in events
+
+
+async def test_wrong_battery_type(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """A cell whose voltage doesn't fit the type it is charged as raises a repair.
+
+    NiZn cells set to NiZn charged at about 1.75 V (2026-11-13); a NiMH cell charged as NiZn reads
+    well under that.
+    """
+    config_entry.add_to_hass(hass)
+    coordinator = IsdtCoordinator(hass, config_entry, INFO)
+    # A copy: the polls are shared between tests.
+    now, polled = load_polls("batch1.log.gz")[894]
+    metrics = [dict(m) for m in polled]
+    empty = {**metrics[0], "dimensions id": 4, "mode id": 0, "chemistry id": 0,
+             "charging voltage": 0, "charging current": 0, "resistance": 0, "time": 0}
+    number = 1
+    metrics[0] = empty
+    coordinator._process(metrics, now)
+    coordinator._first = False
+    issue_id = f"{config_entry.entry_id}_slot_{number:02d}_wrong_type"
+
+    def poll(minutes: int, **values: int) -> bool:
+        metrics[number - 1] = {**empty, **values}
+        coordinator._process(metrics, now + timedelta(minutes=minutes))
+        coordinator._sync_repairs()
+        return ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+
+    charging = {"dimensions id": 1, "mode id": 3, "chemistry id": 5, "charging current": 1000,
+                "progress": 90, "time": 60, "resistance": 200}
+    assert not poll(1, **charging, **{"charging voltage": 1750})
+    assert coordinator.slots[number - 1].battery_type == "nizn"
+    assert not poll(2)  # emptied
+    assert poll(3, **charging, **{"charging voltage": 1380})
+    assert not poll(4)  # emptied: the repair goes

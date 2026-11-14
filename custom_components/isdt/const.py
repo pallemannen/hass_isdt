@@ -68,6 +68,33 @@ BATTERY_TYPES = {
 # The alkaline, and worn, checks are made for nickel cells. They also apply while the type is
 # not known, or Auto, as an alkaline is reported as a nickel cell, or not at all.
 NICKEL_TYPES = ("auto", "nicd", "nimh")
+
+# A battery type that doesn't fit the cell: the charger has one type setting for all slots, so a
+# batch of another chemistry is easily charged as the last one.
+# On Auto the N24 rejects NiZn cells (seen 2026-11-13, at 1.65-1.73 V). That is no hint on its
+# own: rejected alkalines, NiCd and bumped NiMH read 1.57-1.86 V in the logs.
+# What each type reads early in a charge, at about 1 A (mV). A cell outside it is most likely
+# charged as the wrong type. Wide on purpose: only a clear misfit counts.
+TYPE_CHARGE_VOLTAGE = {
+    "nicd": (900, 1650),
+    "nimh": (900, 1650),
+    "nizn": (1450, 2000),
+    "li_ion": (2500, 4300),
+    "lihv": (2500, 4450),
+    "life": (2000, 3750),
+}
+# The types as the charger's menu names them, for repair texts.
+TYPE_NAMES = {
+    "auto": "Auto",
+    "lihv": "LiHV",
+    "li_ion": "Li-ion",
+    "life": "LiFe",
+    "nizn": "NiZn",
+    "nicd": "NiCd",
+    "nimh": "NiMH",
+}
+# How early in a charge the voltage is taken for that check.
+TYPE_CHECK_WINDOW = timedelta(minutes=5)
 DIMENSIONS_EMPTY = 4
 PRE_CHARGE_CURRENT = 200  # mA. Pre-charge runs at about 100 mA, normal charging at about 1 A.
 
@@ -134,7 +161,10 @@ EVENT_TYPES = [EVENT_CHARGED, EVENT_ALL_CHARGED, EVENT_REMOVE_CELL, EVENT_LONG_C
 REPAIR_POSSIBLE_ALKALINE = "possible_alkaline"
 REPAIR_SHORTED = "shorted"
 REPAIR_LONG_CHARGE = "long_charge"
+REPAIR_WRONG_TYPE = "wrong_type"
 REPAIR_SEVERITY = {
+    # Charged as the wrong chemistry, a cell is charged to the wrong voltage.
+    REPAIR_WRONG_TYPE: "error",
     # Alkalines can leak, or burst, when charged.
     REPAIR_POSSIBLE_ALKALINE: "error",
     # A shorted cell takes current, and turns it into heat.

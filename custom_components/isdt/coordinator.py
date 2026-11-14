@@ -17,6 +17,10 @@ from homeassistant.util import dt as dt_util
 
 from .api import CannotConnect, ChargerInfo, read_metrics
 from .const import (
+    REPAIR_WRONG_TYPE,
+    TYPE_CHARGE_VOLTAGE,
+    TYPE_CHECK_WINDOW,
+    TYPE_NAMES,
     ALKALINE_FLAT_VOLTAGE,
     ALKALINE_PRECHARGE_VOLTAGE,
     ALKALINE_RESISTANCE,
@@ -130,6 +134,7 @@ class SlotState:
     charge_start: datetime | None = None
     remove_reported: bool = False
     long_charge_reported: bool = False
+    start_voltage: int | None = None  # mV, early in the first charge since insertion
 
     def reset(self) -> None:
         """The slot was emptied."""
@@ -142,6 +147,17 @@ class SlotState:
         self.charge_start = None
         self.remove_reported = False
         self.long_charge_reported = False
+        self.start_voltage = None
+
+    def mismatched_type(self) -> bool:
+        """Charging as a type whose voltage the cell clearly doesn't have."""
+        expected = TYPE_CHARGE_VOLTAGE.get(self.battery_type or "")
+        return (
+            expected is not None
+            and self.start_voltage is not None
+            and self.status in (STATUS_CHARGING, STATUS_CHARGED)
+            and not expected[0] <= self.start_voltage <= expected[1]
+        )
 
 
 class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
@@ -223,6 +239,8 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
             wanted = {
                 REPAIR_POSSIBLE_ALKALINE: slot.verdict == VERDICT_POSSIBLE_ALKALINE,
                 REPAIR_SHORTED: slot.verdict == VERDICT_SHORTED,
+                # A cell to take out says so already.
+                REPAIR_WRONG_TYPE: slot.mismatched_type() and slot.verdict not in REMOVE_VERDICTS,
                 REPAIR_LONG_CHARGE: slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE)
                 and timedelta(seconds=slot.metrics["time"]) >= LONG_CHARGE
                 and slot.verdict not in REMOVE_VERDICTS,
@@ -241,6 +259,8 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                         translation_placeholders={
                             "charger": self.config_entry.title,
                             "slot": str(slot.number),
+                            "type": TYPE_NAMES.get(slot.battery_type or "", "?"),
+                            "voltage": f"{(slot.start_voltage or slot.metrics.get('charging voltage', 0)) / 1000:.2f}",
                         },
                     )
                 else:
@@ -297,6 +317,15 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
             elif status in (STATUS_CHARGING, STATUS_PRE_CHARGE):
                 slot.termination = None
                 self._track_charge_start(slot, metrics, now)
+            if (
+                status == STATUS_CHARGING
+                and slot.start_voltage is None
+                and not slot.charged_normally
+                # Real charging current: near-empty slots briefly report "charging" at 0 mA.
+                and metrics["charging current"] >= PRE_CHARGE_CURRENT
+                and timedelta(seconds=metrics["time"]) <= TYPE_CHECK_WINDOW
+            ):
+                slot.start_voltage = metrics["charging voltage"]
 
             slot.verdict = self._verdict(slot, metrics, status, now)
 
