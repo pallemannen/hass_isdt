@@ -193,8 +193,8 @@
       "description": "The cell in slot {slot} has been charging for more than 4 hours. A normal AA or AAA charge on the N24 takes less than 2. Check that the cell is a NiMH or NiCd, and that it isn't getting hot.\n\nThis goes away once charging stops."
     },
     "wrong_type": {
-      "title": "Check the battery type for {charger} slot {slot}",
-      "description": "The cell in slot {slot} is charged as {type}, but it read {voltage} V early in the charge, which doesn't fit {type}. The charger's battery type is one setting for all slots, so it may still be set for the last batch. Charged as the wrong type, a cell is charged to the wrong voltage.\n\nTake the cell out, set the battery type to match it (or Auto for NiMH), and put it back.\n\nThis goes away once the slot is empty."
+      "title": "Check the cell in {charger} slot {slot}",
+      "description": "The cell in slot {slot} is charged as {type}, but it read {voltage} V early in the charge, which doesn't fit {type}. Either the charger's battery type is wrong for it (it is one setting for all slots, so it may still be set for the last batch), or it is an alkaline, which reads high when charged.\n\nTake it out. If it is rechargeable, set the battery type to match it (NiZn cells need NiZn; Auto handles NiMH), and put it back. An alkaline stays out.\n\nThis goes away once the slot is empty."
     }
   }
 }

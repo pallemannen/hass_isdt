@@ -239,7 +239,8 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
             wanted = {
                 REPAIR_POSSIBLE_ALKALINE: slot.verdict == VERDICT_POSSIBLE_ALKALINE,
                 REPAIR_SHORTED: slot.verdict == VERDICT_SHORTED,
-                REPAIR_WRONG_TYPE: slot.mismatched_type(),
+                # A cell to take out says so already.
+                REPAIR_WRONG_TYPE: slot.mismatched_type() and slot.verdict not in REMOVE_VERDICTS,
                 REPAIR_LONG_CHARGE: slot.status in (STATUS_CHARGING, STATUS_PRE_CHARGE)
                 and timedelta(seconds=slot.metrics["time"]) >= LONG_CHARGE
                 and slot.verdict not in REMOVE_VERDICTS,

@@ -79,6 +79,8 @@ async def test_batch2(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         "slot_12_possible_alkaline",
         "slot_15_possible_alkaline",
         "slot_03_shorted",
+        # An Energizer MAX alkaline, charged as NiMH at a voltage no NiMH has.
+        "slot_09_wrong_type",
     }
     assert len(_of(events, "charged")) == 44
     assert len(_of(events, "all_charged")) == 3
@@ -158,9 +160,13 @@ async def test_wrong_battery_type(hass: HomeAssistant, config_entry: MockConfigE
     """
     config_entry.add_to_hass(hass)
     coordinator = IsdtCoordinator(hass, config_entry, INFO)
-    now, metrics = load_polls("batch1.log.gz")[894]
-    empty = next(m for m in metrics if m["dimensions id"] == 4)
-    number = empty["channel"] + 1
+    # A copy: the polls are shared between tests.
+    now, polled = load_polls("batch1.log.gz")[894]
+    metrics = [dict(m) for m in polled]
+    empty = {**metrics[0], "dimensions id": 4, "mode id": 0, "chemistry id": 0,
+             "charging voltage": 0, "charging current": 0, "resistance": 0, "time": 0}
+    number = 1
+    metrics[0] = empty
     coordinator._process(metrics, now)
     coordinator._first = False
     issue_id = f"{config_entry.entry_id}_slot_{number:02d}_wrong_type"
