@@ -321,6 +321,8 @@ class IsdtCoordinator(DataUpdateCoordinator[list[SlotState]]):
                 status == STATUS_CHARGING
                 and slot.start_voltage is None
                 and not slot.charged_normally
+                # Real charging current: near-empty slots briefly report "charging" at 0 mA.
+                and metrics["charging current"] >= PRE_CHARGE_CURRENT
                 and timedelta(seconds=metrics["time"]) <= TYPE_CHECK_WINDOW
             ):
                 slot.start_voltage = metrics["charging voltage"]

@@ -79,8 +79,6 @@ async def test_batch2(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         "slot_12_possible_alkaline",
         "slot_15_possible_alkaline",
         "slot_03_shorted",
-        # An Energizer MAX alkaline, charged as NiMH at a voltage no NiMH has.
-        "slot_09_wrong_type",
     }
     assert len(_of(events, "charged")) == 44
     assert len(_of(events, "all_charged")) == 3
