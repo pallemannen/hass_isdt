@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Repairs when the charger's battery type seems wrong for a cell (one setting for all slots, so a
+  new batch is easily charged as the last one): "Is the cell NiZn?" (warning) for a cell refused
+  at 1.6-1.9 V, which is what Auto does with NiZn cells; and "Check the battery type" (error)
+  for a cell whose voltage early in the charge doesn't fit the type it is charged as, such as
+  NiMH charged as NiZn.
+- NiZn (5) confirmed on the N24.
+
 ### Changed
 - The N24 reports NiCd (8) when the charger's battery type is set to NiCd (confirmed; on Auto, nickel cells are NiMH).
 
